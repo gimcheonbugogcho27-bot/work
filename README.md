@@ -25,7 +25,7 @@
 3. 앱의 `AI 대화` 탭에서 `Google Gemini API 키` 칸에 붙여넣습니다.
 4. 모델 기본값은 `gemini-3.8-flash`입니다. 계정에서 사용할 수 있는 다른 모델 ID로 바꿀 수도 있습니다.
 
-앱은 API 키를 저장하지 않습니다. API 키는 비밀번호처럼 다루고 GitHub에 올리지 마세요. 사용량·요금·무료 제공 한도는 Google AI Studio의 Usage/Billing 페이지에서 확인하세요. 앱은 Gemini Interactions API를 사용합니다.
+기본 설정에서는 앱이 API 키를 저장하지 않습니다. 개인용 실행 파일에 키를 미리 넣으려면 GitHub 저장소의 **Settings → Secrets and variables → Actions → New repository secret**에서 이름을 `GEMINI_API_KEY`로, 값에 발급받은 키를 입력하세요. 이 워크플로는 키를 소스 파일에 기록하지 않고 빌드 중 임시 설정으로 넣습니다. 키를 포함한 실행 파일은 키를 추출할 수 있으므로 본인 PC에서만 사용하고 공유하지 마세요. 사용량·요금·무료 제공 한도는 Google AI Studio의 Usage/Billing 페이지에서 확인하세요. 앱은 Gemini Interactions API를 사용합니다.
 
 ## 실행 중 참고
 

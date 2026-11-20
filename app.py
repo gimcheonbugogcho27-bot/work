@@ -8,6 +8,11 @@ from tkinter import filedialog, messagebox, ttk
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+try:
+    from build_config import DEFAULT_GEMINI_API_KEY
+except ImportError:
+    DEFAULT_GEMINI_API_KEY = ""
+
 APP_TITLE = "선생님 업무 도구함"
 
 
@@ -165,7 +170,7 @@ class TeacherToolkit(tk.Tk):
         ttk.Label(top, text="Google Gemini API 키").pack(side="left")
         self.api_key = ttk.Entry(top, show="•", width=42)
         self.api_key.pack(side="left", padx=8)
-        self.api_key.insert(0, os.getenv("GEMINI_API_KEY", ""))
+        self.api_key.insert(0, os.getenv("GEMINI_API_KEY") or DEFAULT_GEMINI_API_KEY)
         ttk.Label(top, text="모델").pack(side="left", padx=(10, 4))
         self.ai_model = ttk.Entry(top, width=19)
         self.ai_model.insert(0, "gemini-3.8-flash")
