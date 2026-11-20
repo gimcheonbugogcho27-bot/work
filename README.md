@@ -5,7 +5,7 @@
 ## 포함 기능
 
 - QR 코드 생성 및 PNG 저장
-- OpenAI API를 이용한 AI 대화
+- Google Gemini API를 이용한 AI 대화
 - 스톱워치와 수업 타이머
 - 현재 시계와 알람
 - 학생 이름 무작위 선정 (중복 없이 한 바퀴)
@@ -20,7 +20,12 @@
 
 ## AI 대화 설정
 
-AI 대화 탭에서 OpenAI API 키를 입력하세요. 앱은 키를 파일에 저장하지 않습니다. API 이용료는 OpenAI 계정에 별도로 청구될 수 있습니다. 모델 칸에는 사용 가능한 모델명을 입력할 수 있고 기본값은 `gpt-4o-mini`입니다.
+1. [Google AI Studio](https://aistudio.google.com/apikey)에 Google 계정으로 로그인합니다.
+2. API 키 페이지에서 `API 키 만들기`를 눌러 Gemini API 키를 발급하고 복사합니다.
+3. 앱의 `AI 대화` 탭에서 `Google Gemini API 키` 칸에 붙여넣습니다.
+4. 모델 기본값은 `gemini-3.8-flash`입니다. 계정에서 사용할 수 있는 다른 모델 ID로 바꿀 수도 있습니다.
+
+앱은 API 키를 저장하지 않습니다. API 키는 비밀번호처럼 다루고 GitHub에 올리지 마세요. 사용량·요금·무료 제공 한도는 Google AI Studio의 Usage/Billing 페이지에서 확인하세요. 앱은 Gemini Interactions API를 사용합니다.
 
 ## 실행 중 참고
 

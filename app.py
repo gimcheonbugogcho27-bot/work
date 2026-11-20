@@ -114,7 +114,7 @@ class TeacherToolkit(tk.Tk):
         grid.columnconfigure(0, weight=1)
         grid.columnconfigure(1, weight=1)
         ttk.Label(p, text="도구 사용 안내", style="CardTitle.TLabel").pack(anchor="w", pady=(12, 8))
-        ttk.Label(p, text="• AI 대화에는 OpenAI API 키가 필요합니다. 앱에는 키를 저장하지 않습니다.\n• QR 이미지는 PNG 파일로 저장할 수 있습니다.\n• 알람과 타이머는 앱이 실행 중일 때 울립니다.", justify="left").pack(anchor="w")
+        ttk.Label(p, text="• AI 대화에는 Google Gemini API 키가 필요합니다. 앱에는 키를 저장하지 않습니다.\n• QR 이미지는 PNG 파일로 저장할 수 있습니다.\n• 알람과 타이머는 앱이 실행 중일 때 울립니다.", justify="left").pack(anchor="w")
 
     def _make_qr(self):
         p = self._page("QR 코드", "QR 코드 만들기", "웹 주소, 설문 링크, 안내 문구를 이미지로 저장합니다.")
@@ -162,13 +162,13 @@ class TeacherToolkit(tk.Tk):
         c = self._card(p, 14)
         top = ttk.Frame(c, style="Card.TFrame")
         top.pack(fill="x", pady=(0, 8))
-        ttk.Label(top, text="API 키").pack(side="left")
+        ttk.Label(top, text="Google Gemini API 키").pack(side="left")
         self.api_key = ttk.Entry(top, show="•", width=42)
         self.api_key.pack(side="left", padx=8)
-        self.api_key.insert(0, os.getenv("OPENAI_API_KEY", ""))
+        self.api_key.insert(0, os.getenv("GEMINI_API_KEY", ""))
         ttk.Label(top, text="모델").pack(side="left", padx=(10, 4))
-        self.ai_model = ttk.Entry(top, width=17)
-        self.ai_model.insert(0, "gpt-4o-mini")
+        self.ai_model = ttk.Entry(top, width=19)
+        self.ai_model.insert(0, "gemini-3.8-flash")
         self.ai_model.pack(side="left")
         ttk.Label(c, text="대화 내용", style="CardTitle.TLabel").pack(anchor="w", pady=(4, 6))
         self.chat_log = tk.Text(c, height=17, wrap="word", state="disabled", font=("Malgun Gothic", 10), relief="solid", bd=1, padx=10, pady=8)
@@ -180,7 +180,7 @@ class TeacherToolkit(tk.Tk):
         self.chat_input.bind("<Return>", lambda _e: self.send_chat())
         self.chat_send = ttk.Button(bottom, text="보내기", style="Accent.TButton", command=self.send_chat)
         self.chat_send.pack(side="right")
-        ttk.Label(p, text="API 키는 이번 실행 중에만 입력값으로 사용합니다. OpenAI API 사용량에 따라 별도 비용이 발생할 수 있습니다.", style="Sub.TLabel").pack(anchor="w")
+        ttk.Label(p, text="Google AI Studio에서 발급한 Gemini API 키를 입력하세요. 키는 앱에 저장하지 않습니다. 사용량과 요금은 Google AI Studio에서 확인하세요.", style="Sub.TLabel").pack(anchor="w")
         self.chat_history = []
 
     def _append_chat(self, who, text):
@@ -194,7 +194,7 @@ class TeacherToolkit(tk.Tk):
         prompt = self.chat_input.get().strip()
         model = self.ai_model.get().strip() or "gpt-4o-mini"
         if not key:
-            messagebox.showinfo("API 키 필요", "OpenAI API 키를 입력해 주세요. 키는 앱에 저장되지 않습니다.")
+            messagebox.showinfo("API 키 필요", "Google AI Studio에서 발급한 Gemini API 키를 입력해 주세요. 키는 앱에 저장되지 않습니다.")
             return
         if not prompt:
             return
@@ -206,16 +206,22 @@ class TeacherToolkit(tk.Tk):
 
         def request_answer():
             try:
-                payload = {"model": model, "messages": [{"role": "system", "content": "당신은 초등학교 교사의 업무를 돕는 한국어 교육 보조자입니다. 학생 개인정보를 요구하지 말고, 수업에 바로 쓸 수 있게 명확하고 연령에 맞게 답하세요."}] + self.chat_history[-12:], "temperature": 0.7}
-                request = Request("https://api.openai.com/v1/chat/completions", data=json.dumps(payload).encode("utf-8"), headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"}, method="POST")
+                transcript = "\n\n".join(("선생님: " if item["role"] == "user" else "AI: ") + item["content"] for item in self.chat_history[-12:])
+                prompt = "당신은 초등학교 교사의 업무를 돕는 한국어 교육 보조자입니다. 학생 개인정보를 요구하지 말고, 수업에 바로 쓸 수 있게 명확하고 연령에 맞게 답하세요.\n\n대화 내용:\n" + transcript
+                payload = {"model": model, "input": prompt, "store": False}
+                request = Request("https://generativelanguage.googleapis.com/v1beta/interactions", data=json.dumps(payload).encode("utf-8"), headers={"x-goog-api-key": key, "Content-Type": "application/json"}, method="POST")
                 with urlopen(request, timeout=90) as response:
                     data = json.loads(response.read().decode("utf-8"))
-                answer = data["choices"][0]["message"]["content"].strip()
+                answer = data.get("output_text", "").strip()
+                if not answer:
+                    answer = "\n".join(block.get("text", "") for step in data.get("steps", []) if step.get("type") == "model_output" for block in step.get("content", []) if block.get("type") == "text").strip()
+                if not answer:
+                    raise ValueError("Gemini 응답에서 답변 내용을 찾지 못했습니다.")
                 self.chat_history.append({"role": "assistant", "content": answer})
                 self.after(0, lambda: self._finish_chat(answer))
             except HTTPError as exc:
                 detail = exc.read().decode("utf-8", errors="replace")[:600]
-                error_text = f"요청을 처리하지 못했습니다 (HTTP {exc.code}).\n{detail}"
+                error_text = f"Gemini 요청을 처리하지 못했습니다 (HTTP {exc.code}).\n{detail}"
                 self.after(0, lambda message=error_text: self._finish_chat(message))
             except (URLError, TimeoutError) as exc:
                 error_text = f"인터넷 연결 또는 서버 응답을 확인해 주세요.\n{exc}"
